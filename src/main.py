@@ -1,37 +1,39 @@
 from appwrite.client import Client
 import os
+import logging
+from pytubefix import YouTube
 
 
-# This is your Appwrite function
-# It's executed each time we get a request
+def getDownloadUrls(video_url):
+    try:
+        yt = YouTube(video_url)
+        streams = yt.streams.order_by('resolution')
+        download_list = []
+
+        for stream in streams:
+            resolution = stream.resolution
+            download_url = stream.url
+            download_list.append((resolution, download_url))
+
+        return download_list  # Ensure the list is returned
+
+    except Exception as e:
+        logging.error(f"Error processing URL {video_url}: {e}")
+        raise e
+
+
 def main(context):
-    # Why not try the Appwrite SDK?
-    #
-    # client = (
-    #     Client()
-    #     .set_endpoint("https://cloud.appwrite.io/v1")
-    #     .set_project(os.environ["APPWRITE_FUNCTION_PROJECT_ID"])
-    #     .set_key(os.environ["APPWRITE_API_KEY"])
-    # )
-
-    # You can log messages to the console
-    context.log("Hello, Logs!")
-
-    # If something goes wrong, log an error
-    context.error("Hello, Errors!")
-
-    # The `ctx.req` object contains the request data
     if context.req.method == "GET":
-        # Send a response with the res object helpers
-        # `ctx.res.send()` dispatches a string back to the client
-        return context.res.send("Hello, World!")
+        value = context.req.query.get("value")
 
-    # `ctx.res.json()` is a handy helper for sending JSON
-    return context.res.json(
-        {
-            "motto": "Build like a team of hundreds_",
-            "learn": "https://appwrite.io/docs",
-            "connect": "https://appwrite.io/discord",
-            "getInspired": "https://builtwith.appwrite.io",
-        }
-    )
+        if value:
+            try:
+                download_urls = getDownloadUrls(value)
+                result_string = "\n".join([f"Resolution: {res}, URL: {url}" for res, url in download_urls])
+                return context.res.send(result_string)
+            except Exception as e:
+                return context.res.send(f"Error processing URL: {str(e)}")
+        else:
+            return context.res.send("Value parameter is missing in GET REQUEST")
+
+    return context.res.json({"message": "Hello Parshuram Behera"})

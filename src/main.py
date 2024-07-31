@@ -6,7 +6,7 @@ from pytubefix import YouTube
 
 def getDownloadUrls(video_url):
     try:
-        yt = YouTube(video_url)
+        yt = YouTube(video_url,use_oauth=false, allow_oauth_cache=false)
         streams = yt.streams.order_by('resolution')
         download_list = []
 
